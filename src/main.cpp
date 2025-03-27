@@ -6,6 +6,7 @@
 #define DHTPIN 4
 #define DHTTYPE DHT11
 #define LDRPIN 32
+#define LEDPIN 22
 
 const char *ssid = "IoT-Senac";
 const char *password = "Senac@2025";
@@ -47,6 +48,8 @@ void setup()
   dht.begin();
   delay(1000);
   server.begin();
+
+  pinMode(LEDPIN, OUTPUT);
 }
 
 void loop()
@@ -114,6 +117,30 @@ void handleClientRequest(WiFiClient &client, float temperatura, float umidade, i
 
 void sendHttpResponse(WiFiClient &client, float temperatura, float umidade, int luminosidade, String dateTime)
 {
+
+  String recebe_luminosidade = "";
+
+  if (luminosidade <= 1800)
+  {
+    digitalWrite(LEDPIN, HIGH);
+
+    recebe_luminosidade = "Baixo";
+  }
+
+  else if (luminosidade <= 2900)
+  {
+    digitalWrite(LEDPIN, LOW);
+
+    recebe_luminosidade = "Médio";
+  }
+
+  else
+  {
+    digitalWrite(LEDPIN, LOW);
+
+    recebe_luminosidade = "Alta";
+  }
+
   // Cabeçalhos HTTP
   client.println("HTTP/1.1 200 OK");
   client.println("Content-type:text/html");
@@ -221,7 +248,7 @@ void sendHttpResponse(WiFiClient &client, float temperatura, float umidade, int 
   client.print(umidade);
   client.println(" %</div>");
   client.println("Luminosidade");
-  client.print(luminosidade);
+  client.print(recebe_luminosidade);
 
   // Última atualização
   client.println("<p> <strong> Última Atualização : </strong>" + dateTime + "</p>"
